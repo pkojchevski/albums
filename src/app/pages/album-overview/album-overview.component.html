@@ -1,0 +1,35 @@
+<div class="block block-collections-header">
+  <div class="block-decorations"></div>
+  <div class="block-inner">
+    <div class="block-title">
+      ESTA ES TU COLECCIÓN DE CROMOS DEL ALBUM CAMPO<strong style="color:#fff">CAMPO</strong>
+    </div>
+    <!-- <div class="block-title">
+        COLECCIÓN <span class="collection color-lemon">{{albumSingle?.collection}}</span> > ALBUM <strong>{{albumSingle?.name}}</strong>
+      </div> -->
+  </div>
+</div>
+<div class="content-album-overview">
+  <div class="content-mapa">
+    <div class='mapa green'>TENGO {{(cardsAdded$|async)?.length}} CROMOS</div>
+    <div class='mapa gray'>TENGO {{(cardsDuplicates$|async)?.length}} REPETIDOS</div>
+    <div class='mapa red'>ME FALTAN {{(cardsMissing$|async)?.length}} CROMOS</div>
+  </div>
+  <div class="album-cards-overview">
+    <div class="cards" *ngFor="let card of (userAlbum$|async).cards">
+      <div class="card green" *ngIf="card.added">
+        <div class="number">{{card.nrOfCard}}</div>
+      </div>
+      <div class="card red" *ngIf="!card.added">
+        <div class="number">{{card.nrOfCard}}</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div CLASS="footer">
+  <button class="btn btn-new gray">VER OTROS<br /> ALBUMS</button>
+  <button class="btn btn-new red">CANJEAR<br />
+    REPETIDOS</button>
+  <button class="btn btn-new green">JUGAR<br />
+    TRIVIAS</button>
+</div>

@@ -1,0 +1,49 @@
+<div class="trivia-second-container">
+  <div class="header">
+    <img class="header-image-one" src="../../../assets/img/kid-girl.png">
+    <img class="header-image-two" src="../../../assets/img/stars.png">
+    <div class="header-text">BUENA DECISIÓN <br>
+      RESPONDE ESTA TRIVIA!
+    </div>
+  </div>
+  <div class="content">
+    <div class="content-trivia-img" *ngIf="(question$|async)?.imageUrl !== ''">
+      <img src={{(question$|async)?.imageUrl}}>
+      <div class="image-number"></div>
+    </div>
+    <div class="content-trivia-img" *ngIf="(question$|async)?.imageUrl === ''">
+      <img src="../../../assets/img/missing_image.png">
+      <div class="image-number"></div>
+    </div>
+    <div class="content-trivia">
+      {{(question$|async)?.question}}
+      <div class="content-trivia-answers">
+        <div *ngFor="let answer of (question$|async)?.answers let i = index;">
+          <div class="content-trivia-answer" [ngClass]="{'green':answer.correct && clicked[i],
+          'red':!answer.correct && clicked[i]}"
+            (click)="answerClicked(answer, i)">{{answer.answer}}</div>
+        </div>
+      </div>
+      <div class='response' *ngIf="correctAnswer">
+        <div class="response-text1">FELICITACIONES! ACERTASTE!</div>
+        <div class="response-text2">HAZ SUMADO EL CROMO 24</div>
+        <button class='btn btn-round btn-green bth-lg btn-left' (click)="returnToAlbum()">VER ALBUM</button>
+      </div>
+      <div class='response' *ngIf="wrongAnswer">
+        <div class="response-text1">
+          FALLASTE! NO TE PREOCUPES! TIENES UNA CHANCE MÁS
+        </div>
+        <div class="response-text2">
+          (si no lo logras, <br> reintentas mañana)
+        </div>
+        <button class='btn btn-round btn-green bth-lg btn-left' (click)="returnToAlbum()">
+          VOLVER A INVENTAR
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <img src="../../../assets/img/stars_2.png">
+  </div>
+</div>

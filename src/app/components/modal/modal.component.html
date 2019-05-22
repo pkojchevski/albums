@@ -1,0 +1,18 @@
+<div class="modal-wrapper">
+  <div class="modal">
+    <div class="modal-inner">
+      <div class="modal-header" *ngIf="!['trivia-first', 'trivia-decond', 'trivia-third'].includes(modal.modalType)">
+        <a class="modal-close" (click)="closeModal()"><span class="icon icon-modal-close"></span></a>
+      </div>
+      <div class="modal-content">
+        <app-auth *ngIf="modal.modalType === 'auth'"></app-auth>
+        <app-create-group *ngIf="modal.modalType === 'create_group'"></app-create-group>
+        <app-my-groups *ngIf="modal.modalType === 'my_groups'"></app-my-groups>
+        <app-trivia-first *ngIf="modal.modalType === 'trivia-first'"></app-trivia-first>
+        <app-trivia-second *ngIf="modal.modalType === 'trivia-second'"></app-trivia-second>
+        <app-album-subscription *ngIf="modal.modalType === 'album_subscription'"></app-album-subscription>
+      </div>
+      <div class="modal-footer"></div>
+    </div>
+  </div>
+</div>

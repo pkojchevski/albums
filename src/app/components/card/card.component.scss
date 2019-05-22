@@ -1,0 +1,33 @@
+.card {
+    margin: 1rem;
+    width: 165px;
+    height: 225px;
+    object-fit: cover;
+    margin: 1rem;
+    padding: 7px;
+    border: 1px solid #b3b3b3;
+    background-color: #fff;
+    text-align: center;
+    position: relative;
+}
+
+.card:hover {
+    cursor: pointer;
+}
+
+.card-image {}
+
+.card-number {
+    width: 100%;
+    height: 100%;
+    color: #b3b3b3;
+    font-size: 10rem;
+    text-align: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}

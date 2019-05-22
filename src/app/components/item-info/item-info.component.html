@@ -1,0 +1,22 @@
+<div class="item-info" *ngIf="closed">
+  <a class="item-info-close" (click)="closed = ! closed">
+    <span class="icon icon-close"></span>
+  </a>
+  <div class="item-info-text" *ngIf="private">
+    ESTE GRUPO ES PRIVADO Y
+    NO PUEDES AGRUPARTE AHÍ.
+    SELECCIONA OTRO :)
+  </div>
+  <div class="item-info-text body" *ngIf="!private && joined">
+    HAS SELECCIONADO
+    UN GRUPO DEL QUE
+    YA SOS MIEMBRO:
+    DESEAS DESAGRUPARTE? 
+    <div class="buttons">
+      <button class="btn btn-round btn-green">NO</button>
+      <button class="btn btn-round btn-white btn-color-red">SI</button>
+      <div class="icon icon-user"></div>
+      <div class="icon icon-arrow-back"></div>
+    </div>
+  </div>
+</div>

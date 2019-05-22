@@ -1,0 +1,102 @@
+<div class="create-group">
+  <div class="create-step">
+    <div class="block-title">¡EXCELENTE! <br>VAS A CREAR UN NUEVO GRUPO</div>
+    <div class="block-content" *ngIf="currentStep == 0">
+      <form #createGroupStep1="ngForm" (submit)="formNextStep()">
+        <div class="form-line">
+          <div class="form-field">
+            <input type="text" name='name' placeholder="Nombre:" [(ngModel)]="groupSettings.name" required>
+          </div>
+        </div>
+        <div class="form-line">
+          <label class="form-label">Emblema:</label>
+          <div class="form-field">
+            <div class="group-label"><img src="assets/img/group-label_cup.svg" alt=""></div>
+          </div>
+        </div>
+        <div class="form-line">
+          <div class="form-field">
+            <textarea name="description" placeholder="Descripción:" [(ngModel)]="groupSettings.description" required></textarea>
+          </div>
+        </div>
+        <div class="form-line">
+          <label class="form-label">Admisión:</label>
+          <div class="form-field">
+            <div class="radio-group">
+              <div class="form-field-radio">
+                <input type="radio" id="private" name="group_type" value="private" [(ngModel)]="groupSettings.type">
+                <label for="private">Privada</label>
+              </div>
+              <div class="form-field-radio">
+                <input type="radio" id="public" name="group_type" value="public" [(ngModel)]="groupSettings.type">
+                <label for="public">Pública</label>
+              </div>
+            </div>
+          </div>
+          <div class="form-field-help">En los Grupos Privados, podrás añadir usuarios vía mail <br>
+            o compartiendo un código que deberán utilizar para <br>
+            ingresar. Esto lo harás en el siguiente paso.</div>
+        </div>
+        <div class="form-line">
+          <div class="form-field"><input type="date" name="date" placeholder="Fecha de inicio:" [(ngModel)]="groupSettings.dateStart"
+              required></div>
+        </div>
+        <div class="form-line submit-line">
+          <button class="btn btn-round btn-green" [disabled]="createGroupStep1.form.invalid">CONTINUAR</button>
+          <div class="form-field-help">Ten en cuenta que destinarás 100 puntos al crearlo</div>
+        </div>
+      </form>
+    </div>
+    <div class="block-content" *ngIf="currentStep == 1">
+      <div class="form-line">
+        <div class="group-info">
+          <div class="group-data">
+            <div class="group-name">{{groupSettings.name}}</div>
+            {{groupSettings.type}} / COD ACCESO: 0147928
+            <div class="group-actions">
+              <div class="group-type">ASOCIAR ALBUM</div>
+              <a class="remove-group" (click)="closeModal()">BORRAR GRUPO</a>
+            </div>
+          </div>
+          <div class="group-label">
+            <img src="{{groupSettings.label}}" alt="">
+          </div>
+        </div>
+      </div>
+      <div class="form-line">
+        <div class="form-field">
+          <div class="form-field-help">Debes añadir usuarios por mail, ingresando sus correos.
+            Verás en el listado los que aceptaron la invitación y los
+            que aún no respondieron <strong>(?)</strong>. Podrás eliminar miembros
+            y volver a enviar invitación a los que no respondieron.</div>
+        </div>
+      </div>
+      <div class="form-line">
+        <div class="add-users">
+          <div class="form-field">
+            <input type="email" placeholder="Mail:" [(ngModel)]="newUser" [ngModelOptions]="{standalone: true}">
+          </div>
+          <div class="form-btn"><a class="btn btn-icon" (click)="addUser()"><span class="icon icon-plus"></span></a></div>
+        </div>
+      </div>
+      <div class="form-line" *ngIf="groupSettings.users.length > 0">
+        <div class="users-list">
+          <div class="user-item" *ngFor="let user of groupSettings.users">
+            <div class="user-email">{{user.user_email}}</div>
+            <div class="user-status">
+              <span class="icon icon-mail_sent" *ngIf="user.user_status == 'pending'"></span>
+              <span class="icon icon-question" *ngIf="user.user_status == 'pending'"></span>
+              <span class="icon icon-approved" *ngIf="user.user_status != 'pending'"></span>
+              <a (click)="deleteUser(user)"><span class="icon icon-delete"></span></a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="form-line submit-line">
+        <button class="btn btn-round btn-gray btn-lg" (click)="formPrevStep()">VOLVER <br>ATRÁS</button>
+        <button class="btn btn-round btn-green btn-lg" (click)="formNextStep()">CREAR</button>
+      </div>
+    </div>
+    <div class="block-footer">¿Deseas saber más sobre Grupos? <a [routerLink]="'/help'">AYUDA</a></div>
+  </div>
+</div>

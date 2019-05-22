@@ -1,0 +1,77 @@
+<div class="interactive-albums-block block">
+  <div class="block-title">EXPLORA NUESTROS CROMOS</div>
+  <div class="block-albums">
+    <div class="block-inner">
+      <div class="block-subtitle">ejemplos de album completo</div>
+      <div class="albums-list">
+        <div class="albums-list-inner">
+          <!-- <div class="albums-col" *ngFor="let col of [1,2]"> -->
+          <div class='albums-col' *ngIf="!(images$|async) as images">
+            <!-- <div *ngIf="!imagesSliceLeft || imagesSliceLeft?.length === 0"> -->
+            <div class="album-item" *ngFor="let album of [1,2,3,4]">
+              <div class="album-inner">
+                <div class="album-img">
+                  <img src="../../../assets/img/spinner.gif">
+                  <div class="album-icon"><span class="icon icon-info"></span></div>
+                </div>
+                <div class="album-title">{{rndAlbum.name}}</div>
+                <div class="album-content">xxxxxxxx</div>
+                <a class="album-link"></a>
+              </div>
+            </div>
+          </div>
+          <div class='albums-col' *ngIf="!(images$|async) as images">
+            <div class="album-item" *ngFor="let album of [1,2,3,4]">
+              <div class="album-inner">
+                <div class="album-img">
+                  <img src="../../../assets/img/spinner.gif">
+                  <div class="album-icon"><span class="icon icon-info"></span></div>
+                </div>
+                <div class="album-title">xxxxxxx</div>
+                <div class="album-content">xxxxx</div>
+                <a class="album-link"></a>
+              </div>
+            </div>
+          </div>
+          <div class="albums-col" *ngIf="(images$|async) as images">
+            <div class="album-item" *ngFor="let album of images | slice:0:4;let i = index">
+              <div class="album-inner">
+                <div class="album-img"> {{i}}
+                  <img appImgPreloader="{{album?.image.url}}" [class.hideImg]="selected1[i]" alt="">
+                  <div class="album-icon" (click)="iconIsClicked1(i)"><span class="icon icon-info"></span></div>
+                  <div class='album-description' [class.showDesc]="selected1[i]">{{album?.image.description}}
+                  </div>
+                </div>
+                <div class="album-title">{{album?.nrOfCard}}. {{album?.image.title}}</div>
+                <div class="album-content"></div>
+                <a class="album-link"></a>
+              </div>
+            </div>
+          </div>
+          <div class="albums-col" *ngIf="(images$|async) as images">
+            <div class="album-item" *ngFor="let album of images | slice:4:8;let i = index">
+              <div class="album-inner">
+                <div class="album-img">
+                  <img appImgPreloader="{{album?.image.url}}" [class.hideImg]="selected2[i]" alt="">
+                  <div class="album-icon" (click)="iconIsClicked2(i)"><span class="icon icon-info"></span></div>
+                  <div class='album-description' [class.showDesc]="selected2[i]">{{album?.image.description}}
+                  </div>
+                </div>
+                <div class="album-title">{{album?.nrOfCard}}. {{album?.image.title}}</div>
+                <div class="album-content"></div>
+                <a class="album-link"></a>
+              </div>
+            </div>
+          </div>
+          <div class="book-style" ></div>
+          <div class="albums-pages" *ngIf="images$|async as images">{{images[0].nrOfCard}} -
+            {{images[images.length-1]?.nrOfCard}}</div>
+          <div class="albums-list-navi">
+            <a class="navi-left" (click)='previouse()' [ngClass]="{'beginingOfArray':beginingOfArray}"><span class="icon icon-arrow_l"></span></a>
+            <a class="navi-right" (click)='next()' [ngClass]="{'endOfArray':endOfArray}"><span class="icon icon-arrow_r"></span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

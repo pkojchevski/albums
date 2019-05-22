@@ -1,0 +1,82 @@
+<div class="interactive-albums-block block">
+  <div class="block-albums">
+    <div class="block-inner">
+      <div class="albums-list">
+        <div class="albums-list-inner">
+          <!-- <div class="albums-col" *ngFor="let col of [1,2]"> -->
+          <div class='albums-col' *ngIf="!(userAlbum)">
+            <!-- <div *ngIf="!imagesSliceLeft || imagesSliceLeft?.length === 0"> -->
+            <div class="album-item" *ngFor="let album of [1,2,3,4]">
+              <div class="album-inner">
+                <div class="album-img">
+                  <img src="../../../assets/img/spinner.gif">
+                </div>
+                <div class="album-title">xxxxxxxxx</div>
+                <div class="album-content">xxxxxxxx</div>
+                <a class="album-link"></a>
+              </div>
+            </div>
+          </div>
+          <div class='albums-col' *ngIf="!(userAlbum)">
+            <div class="album-item" *ngFor="let album of [1,2,3,4]">
+              <div class="album-inner">
+                <div class="album-img">
+                  <img src="../../../assets/img/spinner.gif">
+                </div>
+                <div class="album-title">xxxxxxx</div>
+                <div class="album-content">xxxxx</div>
+                <a class="album-link"></a>
+              </div>
+            </div>
+          </div>
+          <div class="albums-col" *ngIf="(userAlbum)">
+            <div class="album-item" *ngFor="let card of userAlbumSliced | slice:0:4;let i = index">
+              <div class="album-inner" droppable (onDrop)="onItemDropped($event, card)">
+                <div class="album-img">
+                  <div *ngIf="card?.added">
+                    <img appImgPreloader="{{card?.image.url}}" [class.hideImg]="selectedIndex === i+8" alt="">
+                  </div>
+                  <div *ngIf="!card?.added">
+                    <div class="empty-card">
+                      <div class="empty-card-number">{{card?.nrOfCard}}</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="album-title">{{card?.nrOfCard}}.{{card?.image.title}}</div>
+                <div class="album-content" *ngIf="card?.added">{{card?.question}}</div>
+                <a class="album-link"></a>
+              </div>
+            </div>
+          </div>
+          <div class="albums-col" *ngIf="(userAlbum)">
+            <div class="album-item" *ngFor="let card of userAlbumSliced | slice:4:8;let i = index">
+              <div class="album-inner" droppable (onDrop)="onItemDropped($event, card)">
+                <div class="album-img">
+                  <div *ngIf="card?.added">
+                    <img appImgPreloader="{{card?.image.url}}" [class.hideImg]="selectedIndex === i+8">
+                  </div>
+                  <div *ngIf="!card?.added">
+                    <div class="empty-card">
+                      <div class="empty-card-number">{{card?.nrOfCard}}</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="album-title">
+                  {{card?.nrOfCard}}.{{card?.image.title}}
+                </div>
+                <div class="album-content" *ngIf="card?.added">{{card?.question}}</div>
+                <a class="album-link"></a>
+              </div>
+            </div>
+          </div>
+          <div class="book-style"></div>
+          <div class="albums-pages">5 - 12</div>
+          <div class="albums-list-navi">
+            <a class="navi-left" (click)='previouse()' [ngClass]="{'beginingOfArray':beginingOfArray}"><span class="icon icon-arrow_l"></span></a>
+            <a class="navi-right" (click)='next()' [ngClass]="{'endOfArray':endOfArray}"><span class="icon icon-arrow_r"></span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

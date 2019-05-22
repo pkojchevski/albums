@@ -1,0 +1,23 @@
+<div class="cards-wrapper">
+  <!-- <div class="cards">
+    <div class="icon icon-arrow_l" (click)='prev()'></div>
+    <div class="single-card" *ngFor="let card of cards">
+      <app-card [cardUrl]='card.image.url' [cardNumber]='card.nrOfCard'>
+      </app-card>
+    </div>
+    <div class="icon icon-arrow_r" (click)='next()'></div>
+  </div> -->
+  <swiper [config]="config">
+    <div class="swiper-wrapper">
+      <div class="swiper-slide" *ngFor="let card of cardsDuplicates; let i = index">
+        <app-card [cardUrl]='card.image.url' [cardNumber]='card.nrOfCard' (click)="cardChoosed(card)">
+        </app-card>
+      </div>
+    </div>
+    <!-- Add Pagination -->
+    <!-- <div class="swiper-pagination"></div> -->
+    <!-- Add Arrows -->
+    <div class="swiper-button-next"></div>
+    <div class="swiper-button-prev"></div>
+  </swiper>
+</div>

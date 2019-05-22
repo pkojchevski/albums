@@ -1,0 +1,33 @@
+.cards-wrapper {
+    width: 80vw;
+    overflow: auto;
+
+    .cards {
+        display: flex;
+        overflow: hidden;
+        border: 1px solid red;
+        justify-content: center;
+        align-items: center;
+
+    }
+
+    .swiper {
+        height: 225px;
+        width: 85%;
+        margin: 0 auto;
+    }
+
+    .single-card {
+        animation: nextAnim 1s linear infinite;
+    }
+}
+
+@keyframes nextAnim {
+    0% {
+        transform: translateX(0%);
+    }
+
+    100% {
+        transform: translateX(-100%);
+    }
+}

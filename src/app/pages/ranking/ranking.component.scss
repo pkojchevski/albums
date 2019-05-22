@@ -1,0 +1,88 @@
+@import "~src/assets/scss/vars";
+@import "~src/assets/scss/mixins";
+
+.block-ranking-header {
+    height: 15rem;
+    margin-top: 2rem;
+    @extend .corner;
+    background-color: #333333;
+
+    .block-inner {
+        @extend .container;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        .block-title {
+            text-transform: uppercase;
+            color: #CCCCCC;
+            font-size: 4rem;
+            font-weight: bold;
+            line-height: 1em;
+            font-family: $font-exo;
+
+            .collection {
+                &.color-lemon {
+                    color: $color-lemon;
+                    font-weight: bold;
+                }
+            }
+
+            strong {
+                color: #fff;
+                font-weight: bold;
+            }
+        }
+    }
+}
+
+.block-ranking-sub-header {
+    height: 10rem;
+    margin-top: 2rem;
+    @extend .corner;
+    background-color: #333333;
+
+    .block-inner {
+        @extend .container;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        .block-title {
+            text-transform: uppercase;
+            color: #CCCCCC;
+            font-size: 2rem;
+            font-weight: bold;
+            line-height: 1em;
+            font-family: $font-exo;
+
+            .collection {
+                &.color-lemon {
+                    color: $color-lemon;
+                    font-weight: bold;
+                }
+            }
+
+            strong {
+                color: #fff;
+                font-weight: bold;
+            }
+        }
+    }
+}
+
+
+.content-album-overview {
+    margin-top: 2rem;
+    background-color: #D5D4D6;
+    padding: 8rem 0;
+
+    .block-inner {
+        @extend .container;
+        max-width: 1400px;
+        display: flex;
+        align-items: center;
+    }
+}

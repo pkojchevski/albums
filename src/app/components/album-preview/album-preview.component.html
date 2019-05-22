@@ -1,0 +1,19 @@
+<div class="album-item">
+  <div class="item-img item-img-green">
+    <!-- <img src="https://source.unsplash.com/random/310x420" alt=""> -->
+    <!-- <img src="../../../assets/img/missing_image.png"> -->
+    <img src="{{album.url}}" alt="">
+    <div class="item-label">
+      <span class="item-label-inner">a</span></div>
+  </div>
+  <div class="item-content">
+    <div class="item-title">{{album.name}}</div>
+    <div class="item-category item-category-green">> {{album.collection}}</div>
+    <div class="item-info">
+      <span>CAT</span>
+      <span>CAS</span>
+      <span>ING</span>
+    </div>
+  </div>
+  <a class="item-link" (click)="openAlbum(album)"></a>
+</div>

@@ -1,0 +1,32 @@
+<div class="block-cardexchange-header">
+  <div class="block-cardexchange-decorations"></div>
+  <div class="block-inner">
+    <div class="block-title">
+      GENIAL ¡VAMOS A CANJEAR CROMOS!<br>
+      PARA LA COLECCIÓN <span class="collection color-lemon">BIOLOGÍA</span> > ALBUM <strong>CAMPO</strong>
+    </div>
+    <!-- <div class="block-title">
+      COLECCIÓN <span class="collection color-lemon">{{albumSingle?.collection}}</span> > ALBUM <strong>{{albumSingle?.name}}</strong>
+    </div> -->
+  </div>
+</div>
+<div class="content-cardexchange">
+  <div class="content-text">
+    Escoge el cromo o persona para hacer el intercambio:
+  </div>
+  <app-carousel [cardsDuplicates]='cards'></app-carousel>
+  <div class="content-text-small">
+    (Tus cromos repetidos para canjear)
+  </div>
+  <div class="content-user-list">
+    <div class="user" *ngFor="let user of users">
+      <app-item [group]='user' [selected]=false [private]=false [joined]=false (click)="playerChoosed(user)"></app-item>
+    </div>
+  </div>
+  <div class="content-text-small">
+    (Personas del grupo que tienen Cromos que te faltan)
+  </div>
+  <div class="content-button">
+    <button class="btn btn-round btn-green" (click)='navigateTo()'>CONFIRMA INTERCAMBIO</button>
+  </div>
+</div>
