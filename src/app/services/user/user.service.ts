@@ -1,18 +1,20 @@
-import {Injectable} from '@angular/core';
+import { Injectable } from '@angular/core';
 import {
   AngularFirestore,
   AngularFirestoreDocument,
   AngularFirestoreCollection,
 } from '@angular/fire/firestore';
-import {User} from 'src/app/models/User';
-import {map, take} from 'rxjs/operators';
-import {ToastService} from '../toast/toast.service';
-import {InitialCard} from 'src/app/models/usersalbums';
-import {UsersalbumsService} from '../usersalbums.service';
+import { User } from 'src/app/models/User';
+import { map, take } from 'rxjs/operators';
+import { ToastService } from '../toast/toast.service';
+import { InitialCard } from 'src/app/models/usersalbums';
+import { UsersalbumsService } from '../usersalbums.service';
 import * as firebase from 'firebase/app';
-import {Album} from 'src/app/models/album';
-import {timingSafeEqual} from 'crypto';
+import { Album } from 'src/app/models/album';
+import { timingSafeEqual } from 'crypto';
 import { DateFloatingFilterComp } from 'ag-grid-community/dist/lib/filter/floatingFilter';
+import { Bean } from 'ag-grid-community';
+import { userInfo } from 'os';
 
 @Injectable({
   providedIn: 'root',
@@ -25,7 +27,7 @@ export class UserService {
     private afs: AngularFirestore,
     private toast: ToastService,
     private usersalbumsService: UsersalbumsService
-  ) {}
+  ) { }
 
   createUser(user: User, uid: string) {
     this.userDoc = this.afs.doc<User>(`users/${uid}`);
@@ -39,7 +41,7 @@ export class UserService {
         actions.map(a => {
           const data = a.payload.doc.data();
           const id = a.payload.doc.id;
-          return {id, ...data};
+          return { id, ...data };
         })
       )
     );
@@ -49,12 +51,12 @@ export class UserService {
     return this.afs
       .collection('users')
       .doc(user.uid)
-      .update({role: user.role})
+      .update({ role: user.role })
       .then(() =>
-        this.toast.newToast({content: 'User is updated!', style: 'success'})
+        this.toast.newToast({ content: 'User is updated!', style: 'success' })
       )
       .catch(err =>
-        this.toast.newToast({content: `Error ${err}`, style: 'warning'})
+        this.toast.newToast({ content: `Error ${err}`, style: 'warning' })
       );
   }
 
@@ -62,120 +64,110 @@ export class UserService {
     return this.afs
       .collection('users')
       .doc(uid)
-      .update({mail_verified: true});
+      .update({ mail_verified: true });
   }
 
-  addAlbumUid(album) {
-    this.getUser(localStorage.getItem('user_uid'))
-      .pipe(take(1))
-      .subscribe((user: User) => this.addAlbumForUser(user, album));
+  // addAlbumToUserUid(album, order) {
+  //   this.getUserFromUid(localStorage.getItem('user_uid'))
+  //     .subscribe((user: User) => this.addAlbumForUser(user, album, order));
+  //   // this.afs.collection(url).add(userAlbum);
+  // }
+
+
+  subscribeUserToAlbum(album) {
+    const userUid = localStorage.getItem('user_uid');
+    this.afs.firestore.runTransaction(async transaction => {
+
+      const userRef = this.afs.doc(`users/${userUid}`).ref;
+      const snap = await transaction.get(userRef);
+
+      const user = <User>snap.data();
+      // tslint:disable-next-line:forin
+      for (const key in user.albums) {
+        if (user.albums[key].uid === album.albumUid) {
+          this.toast.newToast({
+            content: 'You already are subscribed to this album!',
+            style: 'warning',
+          });
+          transaction.update(userRef, {});
+          return;
+        }
+        if (!user.albums[key].uid) {
+          user.albums[key].uid = album.albumUid;
+          user.albums[key].createdAt = firebase.firestore.FieldValue.serverTimestamp();
+          user.questionsTimeFirstAlbum = Date.now();
+          transaction.set(userRef, user);
+          return;
+        }
+      }
+
+    });
   }
 
-  addAlbumForUser(user, album: Album): void {
-    let first,
-      second,
-      third = false;
+  updateUserAlbumsSubscripton(user, album: Album, order: number): void {
     // tslint:disable-next-line:forin
     for (const key in user.albums) {
       if (user.albums[key].uid === album.albumUid) {
         this.toast.newToast({
-          content: 'You already are subscribed to this album, beginning!',
+          content: 'You already are subscribed to this album!',
           style: 'warning',
         });
-        return;
+        return null;
       }
     }
-
-    if (!user.albums.one.uid) {
-      user.albums.one.uid = album.albumUid;
-      user.albums.one.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-      user.questionsTimeFirstAlbum = Date.now();
-      this.usersalbumsService.addUsersAlbums({
-        userUid: user.uid,
-        albumUid: album.albumUid,
-        nrOfAlbumForUser: 1,
-        cards: Array.apply(null, Array(album.nrOfCards)).map(() => InitialCard),
-        uid: '',
-      });
-      first = true;
-      this.toast.newToast({
-        content: 'You successfuly subscribed this album one!',
-        style: 'success',
-      });
-      this.updateOnlyUser(user);
-      return;
-    } else if (!user.albums.two.uid && !first) {
-      user.albums.two.uid = album.albumUid;
-      user.albums.two.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-      user.questionsTimeSecondAlbum = Date.now();
-      this.usersalbumsService.addUsersAlbums({
-        userUid: user.uid,
-        albumUid: album.albumUid,
-        nrOfAlbumForUser: 2,
-        cards: Array.apply(null, Array(album.nrOfCards)).map(() => InitialCard),
-        uid: '',
-      });
-      second = true;
-      this.toast.newToast({
-        content: 'You successfuly subscribed this album two!',
-        style: 'success',
-      });
-      this.updateOnlyUser(user);
-      return;
-    } else if (!user.albums.three.uid && !first && !second) {
-      user.albums.three.uid = album.albumUid;
-      user.albums.three.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-      user.questionsTimeThirdAlbum = Date.now();
-      this.usersalbumsService.addUsersAlbums({
-        userUid: user.uid,
-        albumUid: album.albumUid,
-        nrOfAlbumForUser: 1,
-        cards: Array.apply(null, Array(album.nrOfCards)).map(() => InitialCard),
-        uid: '',
-      });
-      third = true;
-      this.toast.newToast({
-        content: 'You successfuly subscribed this album, three!',
-        style: 'success',
-      });
-      this.updateOnlyUser(user);
-      return;
+    switch (order) {
+      case 1:
+        if (!user.albums.one.uid) {
+          user.albums.one.uid = album.albumUid;
+          user.albums.one.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+          user.questionsTimeFirstAlbum = Date.now();
+        }
+        break;
+      case 2:
+        if (!user.albums.two.uid) {
+          user.albums.two.uid = album.albumUid;
+          user.albums.two.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+          user.questionsTimeSecondAlbum = Date.now();
+        }
+        break;
+      case 3:
+        if (!user.albums.three.uid) {
+          user.albums.three.uid = album.albumUid;
+          user.albums.three.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+          user.questionsTimeThirdAlbum = Date.now();
+        }
+        break;
     }
-    if (first && second && third) {
-      console.log('not here');
-      this.toast.newToast({
-        content: 'You already subscribed for 3 albums!',
-        style: 'warning',
-      });
-      first = false;
-      second = false;
-      third = false;
-      return;
-    }
+    this.toast.newToast({
+      content: 'You successfuly subscribed to this album!',
+      style: 'success',
+    });
+    // this.updateOnlyUser(user);
+    return user;
   }
 
   questionTimeUpdate(order) {
     switch (order) {
       case 1:
-      localStorage.setItem('questionTimeFirstAlbum', Date.now().toString());
-      return this.afs
-      .collection('users')
-      .doc(localStorage.getItem('user_uid'))
-      .update({questionTimeFirstAlbum: Date.now()});
+        localStorage.setItem('questionTimeFirstAlbum', Date.now().toString());
+        return this.afs
+          .collection('users')
+          .doc(localStorage.getItem('user_uid'))
+          .update({ questionTimeFirstAlbum: Date.now() });
 
       case 2:
-      localStorage.setItem('questionTimeSecondAlbum', Date.now().toString());
-      return this.afs
-      .collection('users')
-      .doc(localStorage.getItem('user_uid'))
-      .update({questionTimeSecondAlbum: Date.now()});
+        localStorage.setItem('questionTimeSecondAlbum', Date.now().toString());
+        return this.afs
+          .collection('users')
+          .doc(localStorage.getItem('user_uid'))
+          .update({ questionTimeSecondAlbum: Date.now() });
 
       case 3:
-      localStorage.setItem('questionTimeThirdAlbum', Date.now().toString());
-      return this.afs
-      .collection('users')
-      .doc(localStorage.getItem('user_uid'))
-      .update({questionTimeThirdAlbum: Date.now()});
+        localStorage.setItem('questionTimeThirdAlbum', Date.now().toString());
+        return this.afs
+          .collection('users')
+          .doc(localStorage.getItem('user_uid'))
+          .update({ questionTimeThirdAlbum: Date.now() });
     }
 
   }
@@ -184,8 +176,8 @@ export class UserService {
     return localStorage.getItem('question_time');
   }
 
-  getUser(userUid) {
-    return this.afs.doc<User>('users/' + userUid).valueChanges();
+  getUserFromUid(userUid) {
+    return this.afs.doc<User>(`users/${userUid}`).valueChanges().pipe(take(1));
   }
 
   updateOnlyUser(user) {

@@ -1,18 +1,16 @@
-import {Injectable} from '@angular/core';
+import { Injectable } from '@angular/core';
 import {
   AngularFirestore,
   AngularFirestoreCollection,
 } from '@angular/fire/firestore';
-import {Observable, of, combineLatest} from 'rxjs';
-import {Album} from 'src/app/models/album';
-import {AlbumService} from '../album/album.service';
-import {map, switchMap, flatMap, tap} from 'rxjs/operators';
-import {Image} from 'src/app/models/image';
-import {AlbumcardsService} from '../albumcards/albumcards.service';
-import {AlbumCards} from 'src/app/models/albumcards';
-import {UtilityService} from '../utility.service';
-
-import {dummyImage} from '../../models/image';
+import { Observable, throwError } from 'rxjs';
+import { Album } from 'src/app/models/album';
+import { map, finalize, catchError } from 'rxjs/operators';
+import { Image } from 'src/app/models/image';
+import { AlbumCards } from 'src/app/models/albumcards';
+import { UtilityService } from '../utility.service';
+import { AngularFireStorage } from '@angular/fire/storage';
+import { ToastService } from '../toast/toast.service';
 
 @Injectable({
   providedIn: 'root',
@@ -20,7 +18,8 @@ import {dummyImage} from '../../models/image';
 export class ImageService {
   albums$: Observable<Album[]>;
   albums: Album[];
-  constructor(private afs: AngularFirestore, private utility: UtilityService) {}
+  constructor(private afs: AngularFirestore, private utility: UtilityService,
+    private afStorage: AngularFireStorage, private toast: ToastService) { }
 
   getRndImage(images: Image[]) {
     const rnd = Math.floor(Math.random() * Object.keys(images).length);
@@ -54,14 +53,43 @@ export class ImageService {
       );
   }
 
-  addImage(image) {
-    const imageUid = this.afs.createId();
-    image.imageUid = imageUid;
-    return this.afs
-      .collection<Image>('images')
-      .doc(imageUid)
-      .set(image);
+  addNewImage(image: Image, file: any) {
+    image.imageUid = this.afs.createId();
+    const path = `images/${file.name}`;
+    const fileRef = this.afStorage.ref(path);
+    const task = this.afStorage.upload(path, file);
+    // this.percentage$ = task.percentageChanges();
+    const albumTask$ = task
+      .snapshotChanges()
+      .pipe(
+        finalize(() => {
+          fileRef.getDownloadURL().subscribe(url => {
+            image.url = url;
+            this.afs.collection('images').doc(image.imageUid).set(image)
+              .then(() => {
+                // this.percentage$ = of(null);
+                // this.formReset();
+                this.toast.newToast({
+                  content: 'Image is added',
+                  style: 'success',
+                });
+              })
+              .catch(err => {
+                this.toast.newToast({
+                  content: `Error${err.name}`,
+                  style: 'warning',
+                });
+              });
+          });
+        }),
+        catchError(err => {
+          this.toast.newToast({ content: `Error${err.name}`, style: 'warning' });
+          return throwError(err);
+        })
+      );
+    return albumTask$.toPromise();
   }
+
 
   getFirstNImagesFromAlbum(album, n) {
     return this.afs.collection('albumcards', ref =>
@@ -71,6 +99,8 @@ export class ImageService {
         .limit(n)
     );
   }
+
+
 
   getRandomImageFromAlbum(album: Album) {
     if (!album) {

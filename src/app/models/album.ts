@@ -1,4 +1,5 @@
-import {Image} from './image';
+import * as firebase from 'firebase/app';
+import 'firebase/firestore';
 
 export interface Album {
   albumUid?: string;
@@ -6,6 +7,8 @@ export interface Album {
   name: string;
   nrOfCards?: number;
   genericQuiz: boolean;
+  coverPageUrl?: string;
+  createdAt: firebase.firestore.FieldValue;
 }
 
 export const initialAlbum = {
@@ -14,4 +17,6 @@ export const initialAlbum = {
   nrOfCards: 0,
   albumUid: '',
   genericQuiz: true,
+  coverPageUrl: '',
+  createdAt: firebase.firestore.FieldValue.serverTimestamp()
 };

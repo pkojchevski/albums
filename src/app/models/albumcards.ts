@@ -1,4 +1,4 @@
-import {Image, initialImage} from './image';
+import { Image, initialImage } from './image';
 
 export interface AlbumCards {
   albumcardUid: string;

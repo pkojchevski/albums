@@ -1,18 +1,16 @@
-import {Component, OnInit} from '@angular/core';
-import {ModalService} from '../../services/modal.service';
-import {AuthService} from 'src/app/services/auth/auth.service';
-import {Observable} from 'rxjs';
-import {User} from 'src/app/models/User';
-import {GroupService} from 'src/app/services/group/group.service';
-import {switchMap, tap, map} from 'rxjs/operators';
-import {Group} from 'src/app/models/group';
-import {ToastService} from 'src/app/services/toast/toast.service';
-import {UserService} from 'src/app/services/user/user.service';
-import * as firebase from 'firebase/app';
-import {DataService} from 'src/app/services/data/data.service';
-import {AlbumService} from 'src/app/services/album/album.service';
-import {Album} from 'src/app/models/album';
-import {Router} from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { ModalService } from '../../services/modal.service';
+import { AuthService } from 'src/app/services/auth/auth.service';
+import { Observable } from 'rxjs';
+import { User } from 'src/app/models/User';
+import { GroupService } from 'src/app/services/group/group.service';
+import { Group } from 'src/app/models/group';
+import { ToastService } from 'src/app/services/toast/toast.service';
+import { UserService } from 'src/app/services/user/user.service';
+import { DataService } from 'src/app/services/data/data.service';
+import { AlbumService } from 'src/app/services/album/album.service';
+import { Album } from 'src/app/models/album';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-albums',
@@ -24,6 +22,7 @@ export class AlbumsComponent implements OnInit {
   user$: Observable<User>;
   albums;
   nrOfCromos: number;
+  isSubscribedAlbum: boolean;
 
   constructor(
     private groupService: GroupService,
@@ -33,12 +32,12 @@ export class AlbumsComponent implements OnInit {
     private albumService: AlbumService,
     private toast: ToastService,
     private router: Router
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.email = localStorage.getItem('user_email');
     this.userService
-      .getUser(localStorage.getItem('user_uid'))
+      .getUserFromUid(localStorage.getItem('user_uid'))
       .subscribe(user => {
         if (user) {
           // tslint:disable-next-line:forin
@@ -49,7 +48,7 @@ export class AlbumsComponent implements OnInit {
                 Math.round(
                   (new Date().getTime() -
                     user.albums[key].createdAt.toDate().getTime()) /
-                    (1000 * 3600 * 24)
+                  (1000 * 3600 * 24)
                 );
             }
           }
@@ -63,7 +62,7 @@ export class AlbumsComponent implements OnInit {
       groups.forEach((group: Group) => {
         const alert = confirm(
           `You have invitations for group ${
-            group.name
+          group.name
           }. Do You accept invitation?`
         );
         if (alert === true) {
@@ -83,6 +82,7 @@ export class AlbumsComponent implements OnInit {
       });
       return;
     }
+    this.dataService.changeObject({ 'isSubscribedAlbum': true, order });
     if (!this.questionTime(order)) {
       this.toast.newToast({
         content: 'Next Questions will be avaliable tomorrow.',
@@ -92,36 +92,43 @@ export class AlbumsComponent implements OnInit {
         .getAlbumFromUid(albumNumber.uid)
         .subscribe((album: Album) => {
           this.dataService.changeAlbum(album);
-          this.router.navigateByUrl(`album/${album.name}`);
+          this.router.navigateByUrl(`album/${albumNumber.uid}`);
+          // this.albumService
+          //   .getAlbumFromUid(albumNumber.uid)
+          //   .subscribe((album: Album) => {
+          //     this.dataService.changeAlbum(album);
+          //     this.router.navigateByUrl(`album / ${ album.albumUid }`);
         });
-      return;
+    } else {
+      this.albumService
+        .getAlbumFromUid(albumNumber.uid)
+        .subscribe((album: Album) => {
+          this.dataService.changeAlbum(album);
+          this.router.navigate([`album / ${albumNumber.uid}`]);
+          this.userService.questionTimeUpdate(order);
+          this.modalService.modalShow({
+            modalShow: true,
+            modalContent: { modalType: modalType }
+          });
+        });
     }
-    this.albumService
-      .getAlbumFromUid(albumNumber.uid)
-      .subscribe((album: Album) => {
-        this.dataService.changeAlbum(album);
-        this.userService.questionTimeUpdate(order);
-        this.modalService.modalShow({
-          modalShow: true,
-          modalContent: {modalType: modalType},
-        });
-      });
   }
 
   questionTime(order): boolean {
-    const oneDay = 24 * 60 * 60 * 1000;
+    // const oneDay = 24 * 60 * 60 * 1000;
+    const twoDays = 48 * 60 * 60 * 1000;
     switch (order) {
       case 1:
         return (
-          Date.now() - +localStorage.getItem('questionTimeFirstAlbum') > oneDay
+          Date.now() - +localStorage.getItem('questionTimeFirstAlbum') > twoDays
         );
       case 2:
         return (
-          Date.now() - +localStorage.getItem('questionTimeSecondAlbum') > oneDay
+          Date.now() - +localStorage.getItem('questionTimeSecondAlbum') > twoDays
         );
       case 3:
         return (
-          Date.now() - +localStorage.getItem('questionsTimeThirdAlbum') > oneDay
+          Date.now() - +localStorage.getItem('questionsTimeThirdAlbum') > twoDays
         );
     }
   }
@@ -129,7 +136,7 @@ export class AlbumsComponent implements OnInit {
   openModalGroup(modalType) {
     this.modalService.modalShow({
       modalShow: true,
-      modalContent: {modalType: modalType},
+      modalContent: { modalType: modalType },
     });
   }
 }

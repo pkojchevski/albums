@@ -5,25 +5,23 @@ import {
   ViewChild,
   Renderer2,
 } from '@angular/core';
-import {Album} from 'src/app/models/album';
-import {COLLECTIONS, Collection} from 'src/app/models/collections';
+import { Album } from 'src/app/models/album';
+import { Collection } from 'src/app/models/collections';
 import {
-  AngularFireStorage,
   AngularFireStorageReference,
   AngularFireUploadTask,
 } from '@angular/fire/storage';
-import {Observable, throwError, of} from 'rxjs';
-import {finalize, catchError} from 'rxjs/operators';
-import {Image} from 'src/app/models/image';
-import {ImageService} from 'src/app/services/image/image.service';
-import {initialImage} from '../../models/image';
-import {ToastService} from 'src/app/services/toast/toast.service';
-import {CollectionService} from 'src/app/services/collection.service';
-import {LanguageService} from 'src/app/services/language.service';
-import {Language} from 'src/app/models/language';
-import {Level} from 'src/app/models/level';
-import {LevelService} from 'src/app/services/level.service';
-import {NgForm} from '@angular/forms';
+import { Observable } from 'rxjs';
+import { Image } from 'src/app/models/image';
+import { ImageService } from 'src/app/services/image/image.service';
+import { initialImage } from '../../models/image';
+import { ToastService } from 'src/app/services/toast/toast.service';
+import { CollectionService } from 'src/app/services/collection.service';
+import { LanguageService } from 'src/app/services/language.service';
+import { Language } from 'src/app/models/language';
+import { Level } from 'src/app/models/level';
+import { LevelService } from 'src/app/services/level.service';
+import { NgForm } from '@angular/forms';
 
 @Component({
   selector: 'app-add-images',
@@ -56,20 +54,21 @@ export class AddImagesComponent implements OnInit {
   language: string;
 
   image: Image = initialImage;
+  // image = {} as Image;
   images$: Observable<Image[]>;
-  file;
+  file: any;
   delete: boolean;
   addToAlbum: boolean;
+  isImageDropped: boolean;
+  imageIsAdded: boolean;
 
   constructor(
-    private afStorage: AngularFireStorage,
     private imageService: ImageService,
-    private renderer: Renderer2,
     private toast: ToastService,
     private collectionService: CollectionService,
     private languageService: LanguageService,
     private levelService: LevelService
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.collections$ = this.collectionService.getAllCollections();
@@ -85,86 +84,38 @@ export class AddImagesComponent implements OnInit {
     this.isHovering = event;
   }
 
-  // add image to db and storage
-  addImage() {
-    // tslint:disable-next-line:curly
-    if (!this.file) {
-      this.toast.newToast({content: 'Please add image', style: 'warning'});
-      return;
-    }
-    this.storeAndSaveImage(this.file);
+
+  getImageUrl(event) {
+    this.file = event.file;
+    this.imageIsDropped = event.dropped;
   }
 
-  getFile(event: FileList) {
-    const reader = new FileReader();
-    this.file = event.item(0);
-    if (this.file.type.split('/')[0] !== 'image') {
+  addImage() {
+    if (!this.imageIsDropped) {
       this.toast.newToast({
-        content: 'File type is unsuported',
+        content: `Please upload image!`,
         style: 'warning',
       });
-      this.file = null;
+      this.imageIsAdded = false;
       return;
     }
-    // file
-    reader.readAsDataURL(this.file);
-    reader.onload = () => {
-      this.renderer.setStyle(
-        this.dropzone.nativeElement,
-        'backgroundImage',
-        `url(${reader.result})`
-      );
-      this.imageIsDropped = true;
-    };
-  }
-
-  storeAndSaveImage(file) {
-    const path = `images/${file.name}`;
-    const fileRef = this.afStorage.ref(path);
-    const task = this.afStorage.upload(path, file);
-    this.percentage = task.percentageChanges();
-    task
-      .snapshotChanges()
-      .pipe(
-        finalize(() => {
-          fileRef.getDownloadURL().subscribe(url => {
-            this.image.url = url;
-            this.imageService
-              .addImage(this.image)
-              .then(() => {
-                this.percentage = of(null);
-                this.formReset();
-                this.renderer.removeStyle(
-                  this.dropzone.nativeElement,
-                  'backgroundImage'
-                );
-                this.toast.newToast({
-                  content: 'Image is added',
-                  style: 'success',
-                });
-              })
-              .catch(err =>
-                this.toast.newToast({
-                  content: `Error${err.name}`,
-                  style: 'warning',
-                })
-              );
-          });
-        }),
-        catchError(err => {
-          this.toast.newToast({content: `Error${err.name}`, style: 'warning'});
-          return throwError(err);
+    this.imageService.addNewImage(this.image, this.file)
+      .then(() => {
+        this.toast.newToast({
+          content: 'Image is added',
+          style: 'success',
+        });
+        this.imageIsAdded = true;
+        this.formReset();
+      })
+      .catch(err =>
+        this.toast.newToast({
+          content: `Error${err.name}`,
+          style: 'warning',
         })
-      )
-      .subscribe();
+      );
   }
 
-  isActive(snapshot) {
-    return (
-      snapshot.state === 'running' &&
-      snapshot.bytesTransferred < snapshot.totalBytes
-    );
-  }
 
   formReset() {
     this.form.form.reset();

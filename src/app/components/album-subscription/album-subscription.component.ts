@@ -1,10 +1,11 @@
-import {Component, OnInit, OnDestroy} from '@angular/core';
-import {ModalService} from 'src/app/services/modal.service';
-import {UserService} from 'src/app/services/user/user.service';
-import {DataService} from 'src/app/services/data/data.service';
-import {Album} from 'src/app/models/album';
-import {Subscription} from 'rxjs';
-import {untilComponentDestroyed} from '@w11k/ngx-componentdestroyed';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { ModalService } from 'src/app/services/modal.service';
+import { UserService } from 'src/app/services/user/user.service';
+import { DataService } from 'src/app/services/data/data.service';
+import { Album } from 'src/app/models/album';
+import { Subscription } from 'rxjs';
+import { untilComponentDestroyed } from '@w11k/ngx-componentdestroyed';
+import { first } from 'rxjs/operators';
 
 @Component({
   selector: 'app-album-subscription',
@@ -12,16 +13,16 @@ import {untilComponentDestroyed} from '@w11k/ngx-componentdestroyed';
   styleUrls: ['./album-subscription.component.scss'],
 })
 export class AlbumSubscriptionComponent implements OnInit, OnDestroy {
-  album: Album;
-  subscription: Subscription;
-
+  order: number;
   constructor(
     private modalService: ModalService,
     private userService: UserService,
-    private dataService: DataService
-  ) {}
+    private dataService: DataService,
+  ) { }
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.dataService.currentObject.subscribe(obj => this.order = obj.order);
+  }
 
   closeModal() {
     this.modalService.closeModal();
@@ -29,13 +30,13 @@ export class AlbumSubscriptionComponent implements OnInit, OnDestroy {
 
   subscribeToAlbum() {
     this.dataService.currentAlbum
-      .pipe(untilComponentDestroyed(this))
+      .pipe(untilComponentDestroyed(this), first())
       .subscribe(album => {
-        this.album = album;
-        this.userService.addAlbumUid(album);
+        console.log('album:', album);
+        this.userService.subscribeUserToAlbum(album);
         this.closeModal();
       });
   }
 
-  ngOnDestroy() {}
+  ngOnDestroy() { }
 }

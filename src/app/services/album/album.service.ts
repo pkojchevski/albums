@@ -1,32 +1,78 @@
-import {Injectable} from '@angular/core';
+import { Injectable } from '@angular/core';
 import {
   AngularFirestoreDocument,
   AngularFirestore,
   AngularFirestoreCollection,
 } from '@angular/fire/firestore';
-import {Album} from '../../models/album';
-import {map, expand} from 'rxjs/operators';
-import {Image} from 'src/app/models/image';
-import {ToastService} from '../toast/toast.service';
-import {AlbumcardsService} from '../albumcards/albumcards.service';
-import { Observable, EMPTY } from 'rxjs';
+import { Album } from '../../models/album';
+import { map, expand, finalize, catchError, first } from 'rxjs/operators';
+import { Image } from 'src/app/models/image';
+import { ToastService } from '../toast/toast.service';
+import { AlbumcardsService } from '../albumcards/albumcards.service';
+import { Observable, EMPTY, throwError } from 'rxjs';
+import { AngularFireStorage } from '@angular/fire/storage';
+
+import { BehaviorSubject } from 'rxjs';
+import { UtilityService } from '../utility.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AlbumService {
   albumRef: AngularFirestoreCollection<Album>;
+
+  private isAlbumAddedSource = new BehaviorSubject<Boolean>(false);
+  isAlbumAdded$ = this.isAlbumAddedSource.asObservable();
+
   constructor(
     private afs: AngularFirestore,
     private toast: ToastService,
-    private albumcards: AlbumcardsService
-  ) {}
+    private albumcards: AlbumcardsService,
+    private afStorage: AngularFireStorage,
+    private utilityService: UtilityService
+  ) { }
 
-  addNewAlbum(album: Album) {
+  addNewAlbum(album: Album, file: any) {
     album.albumUid = this.afs.createId();
-    this.albumRef = this.afs.collection<Album>('albums');
-    return this.albumRef.doc(album.albumUid).set(album);
+    album.nrOfCards = 0;
+    const path = `images/albumsCoverage/${file.name}`;
+    const fileRef = this.afStorage.ref(path);
+    const task = this.afStorage.upload(path, file);
+    // this.percentage$ = task.percentageChanges();
+    const albumTask$ = task
+      .snapshotChanges()
+      .pipe(
+        finalize(() => {
+          fileRef.getDownloadURL().subscribe(url => {
+            album.coverPageUrl = url;
+            this.afs.collection('albums').doc(album.albumUid).set(album)
+              .then(() => {
+                // this.percentage$ = of(null);
+                // this.formReset();
+                this.toast.newToast({
+                  content: 'Image is added',
+                  style: 'success',
+                });
+                this.isAlbumAddedSource.next(true);
+              })
+              .catch(err => {
+                this.toast.newToast({
+                  content: `Error${err.name}`,
+                  style: 'warning',
+                });
+                this.isAlbumAddedSource.next(false);
+              });
+          });
+        }),
+        catchError(err => {
+          this.toast.newToast({ content: `Error${err.name}`, style: 'warning' });
+          return throwError(err);
+        })
+      );
+    // .subscribe();
+    return albumTask$.toPromise();
   }
+
 
   updateAlbum(album) {
     this.afs
@@ -36,35 +82,34 @@ export class AlbumService {
   }
 
   addImageToAlbum(albumUid: string, image: Image) {
+    let nrOfCards = 0;
     return this.afs
       .doc<Album>(`albums/${albumUid}`)
       .get()
       .forEach(doc => {
-        const nrOfCards: number = Number(doc.data().nrOfCards) + 1;
+        nrOfCards = Number(doc.data().nrOfCards) + 1;
         this.afs
           .doc<Album>(`albums/${albumUid}`)
-          .update({nrOfCards})
-          .then(() => {
-            const newId = this.afs.createId();
-            return this.afs
-              .collection('albumcards')
-              .doc(newId)
-              .set({
-                albumUid,
-                image,
-                nrOfCard: nrOfCards,
-                albumcardUid: newId,
-              });
-          })
+          .update({ nrOfCards })
+          .then(() => this.albumcards.addCardsToAlbum(albumUid, nrOfCards, image)
+            // const newId = this.afs.createId();
+            // return this.afs
+            //   .collection('albums/${albumUid}/cards')
+            //   .doc(newId)
+            //   .set({
+            //     image,
+            //     nrOfCard: nrOfCards,
+            //   });
+          )
           .then(() =>
-            this.toast.newToast({content: 'Image is added', style: 'success'})
+            this.toast.newToast({ content: 'Image is added', style: 'success' })
           )
           .catch(err =>
-            this.toast.newToast({content: 'Err:' + err, style: 'warning'})
+            this.toast.newToast({ content: 'Err:' + err, style: 'warning' })
           );
       });
   }
-  removeImageFromAlbum(albumUid, albumcardsUid) {
+  removeImageFromAlbum(albumUid, albumcardUid) {
     return this.afs
       .doc<Album>(`albums/${albumUid}`)
       .get()
@@ -75,11 +120,14 @@ export class AlbumService {
             : Number(doc.data().nrOfCards) - 1;
         this.afs
           .doc<Album>(`albums/${albumUid}`)
-          .update({nrOfCards})
+          .update({ nrOfCards })
           .then(() => {
+            console.log('albumcardid:', albumcardUid);
             return this.afs
-              .collection('albumcards')
-              .doc(albumcardsUid)
+              .doc(`albums/${albumUid}/cards/${albumcardUid}`)
+              // .doc(albumUid)
+              // .collection('cards')
+              // .doc(albumcardsUid)
               .delete();
           })
           .then(() =>
@@ -89,7 +137,7 @@ export class AlbumService {
             })
           )
           .catch(err =>
-            this.toast.newToast({content: 'Err:' + err, style: 'warning'})
+            this.toast.newToast({ content: 'Err:' + err, style: 'warning' })
           );
       });
   }
@@ -145,6 +193,10 @@ export class AlbumService {
     return this.afs
       .collection('albums', ref => ref.where('collection', '==', collection))
       .valueChanges();
+    // .snapshotChanges()
+    // .pipe(
+    //   map(snaps => this.utilityService.convertSnaps<Album[]>(snaps))
+    // );
   }
 
   getRandomAlbum(albums: Album[]): Album {
@@ -160,7 +212,16 @@ export class AlbumService {
   }
 
   getAlbumFromUid(uid: string) {
-    return this.afs.doc(`albums/${uid}`).valueChanges();
+    return this.afs.doc(`albums/${uid}`)
+      // return this.afs.collection('albums', ref => ref.where('albumUid', '==', uid))
+      .valueChanges()
+      .pipe(
+        first()
+      );
+    // .snapshotChanges()
+    // .pipe(
+    //   map(snaps => this.utilityService.convertSnaps<Album>(snaps))
+    // );
   }
 
   albumIncrementNrOfCards(uid) {
@@ -169,7 +230,7 @@ export class AlbumService {
     return this.afs.firestore.runTransaction(t => {
       return t.get(album_ref[0]).then(doc => {
         const new_nrOfCards = doc.data().nrOfCards + 1;
-        t.update(album_ref[0], {nrOfCards: new_nrOfCards});
+        t.update(album_ref[0], { nrOfCards: new_nrOfCards });
       });
     });
   }
@@ -180,7 +241,7 @@ export class AlbumService {
     return this.afs.firestore.runTransaction(t => {
       return t.get(album_ref[0]).then(doc => {
         const new_nrOfCards = doc.data().nrOfCards - 1;
-        t.update(album_ref[0], {nrOfCards: new_nrOfCards});
+        t.update(album_ref[0], { nrOfCards: new_nrOfCards });
       });
     });
   }
@@ -191,7 +252,7 @@ export class AlbumService {
     return this.afs.firestore.runTransaction(t => {
       return t.get(album_ref[0]).then(doc => {
         const new_nrOfCards = doc.data().nrOfCards - 1;
-        t.update(album_ref[0], {nrOfCards: new_nrOfCards});
+        t.update(album_ref[0], { nrOfCards: new_nrOfCards });
       });
     });
   }
@@ -208,5 +269,28 @@ export class AlbumService {
         ref.where('name', '==', name).where('collection', '==', collection)
       )
       .valueChanges();
+  }
+
+  getAlbums(pageNumber = 0, pageSize = 5): Observable<Album[]> {
+    return this.afs.collection(`albums`,
+      ref => ref
+        .orderBy('createdAt', 'asc')
+        .limit(pageSize)
+        .startAfter(pageNumber * pageSize))
+      .snapshotChanges()
+      .pipe(
+        map(snaps => this.utilityService.convertSnaps<Album>(snaps))
+      );
+  }
+
+  getLatestAlbum(): Observable<Album> {
+    return this.afs.collection('albums', ref =>
+      ref
+        .orderBy('createdAt', 'asc')
+        .limit(1))
+      .snapshotChanges()
+      .pipe(
+        map(snaps => this.utilityService.convertSnaps<Album>(snaps))
+      );
   }
 }

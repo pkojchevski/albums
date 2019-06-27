@@ -1,17 +1,15 @@
-import {Component, OnInit, Input, Inject} from '@angular/core';
-import {Observable, of} from 'rxjs';
-import {Image} from 'src/app/models/image';
-import {ImageService} from 'src/app/services/image/image.service';
-import {Album} from 'src/app/models/album';
-import {DataService} from 'src/app/services/data/data.service';
-import {GridApi, ColumnApi} from 'ag-grid-community';
-import {CardRendererComponent} from '../manage-images/card-renderer.component';
-import {AlbumcardsService} from 'src/app/services/albumcards/albumcards.service';
-import {ToastService} from 'src/app/services/toast/toast.service';
-import {BatchService} from 'src/app/services/batch/batch.service';
-import {AlbumService} from 'src/app/services/album/album.service';
-import {tap} from 'rxjs/operators';
-import {AlbumCards} from 'src/app/models/albumcards';
+import { Component, OnInit, Input } from '@angular/core';
+import { Observable, Subject, BehaviorSubject } from 'rxjs';
+import { Image } from 'src/app/models/image';
+import { ImageService } from 'src/app/services/image/image.service';
+import { Album } from 'src/app/models/album';
+import { GridApi, ColumnApi } from 'ag-grid-community';
+import { CardRendererComponent } from '../manage-images/card-renderer.component';
+import { AlbumcardsService } from 'src/app/services/albumcards/albumcards.service';
+import { ToastService } from 'src/app/services/toast/toast.service';
+import { AlbumService } from 'src/app/services/album/album.service';
+import { InitialCard } from 'src/app/models/usersalbums';
+import { InitialAlbumCard } from 'src/app/models/albumcards';
 
 @Component({
   selector: 'app-image-list',
@@ -24,8 +22,9 @@ export class ImageListComponent implements OnInit {
   @Input() album: Album;
   @Input() delete: boolean;
   @Input() addToAlbum: boolean;
-  @Input() imagesInput;
   @Input() isImagesForAlbum: boolean;
+  @Input() imagesInput: Image[];
+
   images: Image[];
   cols;
   images$;
@@ -38,8 +37,7 @@ export class ImageListComponent implements OnInit {
     public imageService: ImageService,
     private albumService: AlbumService,
     private toast: ToastService,
-    private albumcardService: AlbumcardsService
-  ) {}
+  ) { }
 
   ngOnInit() {
     if (!this.isImagesForAlbum) {
@@ -57,20 +55,20 @@ export class ImageListComponent implements OnInit {
         {
           field: 'title',
           headerName: 'Title',
-          cellStyle: {'white-space': 'normal !important'},
+          cellStyle: { 'white-space': 'normal !important' },
           editable: true,
           width: 100,
         },
         {
           field: 'description',
           // cellClass: 'cell-wrap-text',
-          cellStyle: {'white-space': 'normal !important'},
+          cellStyle: { 'white-space': 'normal !important' },
           headerName: 'Description',
           autoHeight: true,
           editable: true,
           width: 350,
         },
-        {field: 'language', headerName: 'Language', editable: true, width: 80},
+        { field: 'language', headerName: 'Language', editable: true, width: 80 },
         {
           field: 'url',
           headerName: 'Photo',
@@ -94,32 +92,32 @@ export class ImageListComponent implements OnInit {
         },
         // {field: 'imgName', headerName: 'Name', editable: true, width: 80},
         {
-          field: 'level',
+          field: 'image.level',
           headerName: 'Level',
           width: 100,
         },
         {
-          field: 'collection',
+          field: 'image.collection',
           headerName: 'Collection',
           width: 100,
         },
         {
-          field: 'title',
+          field: 'image.title',
           headerName: 'Title',
-          cellStyle: {'white-space': 'normal !important'},
+          cellStyle: { 'white-space': 'normal !important' },
           width: 100,
         },
         {
-          field: 'description',
+          field: 'image.description',
           // cellClass: 'cell-wrap-text',
-          cellStyle: {'white-space': 'normal !important'},
+          cellStyle: { 'white-space': 'normal !important' },
           headerName: 'Description',
           autoHeight: true,
           width: 350,
         },
-        {field: 'language', headerName: 'Language', width: 80},
+        { field: 'image.language', headerName: 'Language', width: 80 },
         {
-          field: 'url',
+          field: 'image.url',
           headerName: 'Photo',
           cellRendererFramework: CardRendererComponent,
           autoHeight: true,
@@ -138,7 +136,7 @@ export class ImageListComponent implements OnInit {
     let img: Image;
     // tslint:disable-next-line:curly
     if (!this.album.albumUid) {
-      this.toast.newToast({content: 'Please choose album', style: 'warning'});
+      this.toast.newToast({ content: 'Please choose album', style: 'warning' });
       return;
     }
 
@@ -166,17 +164,6 @@ export class ImageListComponent implements OnInit {
   }
 
   onCellValueChanged(event) {
-    console.log('event.data:', event.data);
-    // if (this.isImagesForAlbum) {
-    //   const albumcards: AlbumCards = {
-    //     albumcardUid: event.data.albumcardsUid,
-    //     nrOfCard: Number(event.data.nrOfCard),
-    //     albumUid: event.data.albumUid,
-    //   };
-    //   this.albumcardService.updateCardNumber(albumcards);
-    // } else {
-    //   this.imageService.updateImage(event.data);
-    // }
   }
 
   rowsSelected() {
@@ -184,20 +171,21 @@ export class ImageListComponent implements OnInit {
   }
 
   deleteSelectedRows() {
-    let albumcardsUid: string;
+    let albumcardUid: string;
     let albumUid: string;
     let imageUid: string;
 
     this.api.getSelectedRows().map(rowToDelete => {
-      albumcardsUid = rowToDelete.albumcardsUid;
+      albumcardUid = rowToDelete.albumcardUid;
       albumUid = rowToDelete.albumUid;
       imageUid = rowToDelete.imageUid;
     });
+
     if (this.isImagesForAlbum) {
-      this.albumService.removeImageFromAlbum(albumUid, albumcardsUid);
+      this.albumService.removeImageFromAlbum(albumUid, albumcardUid);
     } else {
-      // window.alert('Development is ongoing');
-      this.imageService.deleteImage(imageUid);
+      window.alert('Development is ongoing');
+      // this.imageService.deleteImage(imageUid);
     }
   }
 }

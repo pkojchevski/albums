@@ -1,17 +1,18 @@
-import {Component, OnInit, Input, EventEmitter, Output} from '@angular/core';
+import { Component, OnInit, Input, EventEmitter, Output, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'app-checkbox',
   templateUrl: './checkbox.component.html',
   styleUrls: ['./checkbox.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CheckboxComponent implements OnInit {
   value: boolean;
   @Output() valueChanged = new EventEmitter<boolean>();
 
-  constructor() {}
+  constructor() { }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   genericChange(event) {
     this.value = true;

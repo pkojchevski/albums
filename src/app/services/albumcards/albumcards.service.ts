@@ -1,12 +1,11 @@
-import {Injectable} from '@angular/core';
-import {AngularFirestore} from '@angular/fire/firestore';
-import {Observable, forkJoin, combineLatest} from 'rxjs';
-import {merge, switchMap, concat, first, take, flatMap} from 'rxjs/operators';
-import {AlbumCards} from 'src/app/models/albumcards';
-import {tap, map} from 'rxjs/operators';
-import {UtilityService} from '../utility.service';
-import {Album} from 'src/app/models/album';
-import {Image} from 'src/app/models/image';
+import { Injectable } from '@angular/core';
+import { AngularFirestore } from '@angular/fire/firestore';
+import { Observable, forkJoin, combineLatest } from 'rxjs';
+import { AlbumCards } from 'src/app/models/albumcards';
+import { tap, map } from 'rxjs/operators';
+import { UtilityService } from '../utility.service';
+import { Album } from 'src/app/models/album';
+import { Image } from 'src/app/models/image';
 
 @Injectable({
   providedIn: 'root',
@@ -17,13 +16,28 @@ export class AlbumcardsService {
   constructor(
     private afs: AngularFirestore,
     private utilityService: UtilityService
-  ) {}
+  ) { }
 
-  addAlbumCards(albumUid: string, nrOfCard: number, image: Image) {
+  addCardsToAlbum(albumUid: string, nrOfCard: number, image: Image) {
     const albumcardUid = this.afs.createId();
+    const albumcard: AlbumCards = { albumUid, albumcardUid, image, nrOfCard };
     return this.afs
-      .collection<AlbumCards>('albumcards')
-      .add({albumcardUid, albumUid, image, nrOfCard});
+      .collection<AlbumCards>('albums').doc(albumUid).collection('cards').doc(albumcardUid)
+      .set(albumcard);
+  }
+
+  getAlbumCards(albumUid: string, pageNumber = 0, pageSize = 8): Observable<AlbumCards[]> {
+    return this.afs.collection(`albumcads`,
+      ref => ref
+        .where('albumUid', '==', albumUid)
+        .where('userUid', '==', localStorage.getItem('user_uid'))
+        .orderBy('nrOfCard', 'asc')
+        .limit(pageSize)
+        .startAfter(pageNumber * pageSize))
+      .snapshotChanges()
+      .pipe(
+        map(snaps => this.utilityService.convertSnaps<AlbumCards>(snaps))
+      );
   }
 
   getFirstNCardsForAlbum(albumUid, limit) {
@@ -67,23 +81,20 @@ export class AlbumcardsService {
     const rnd3 = this.utilityService.getRndNumber(1, album.nrOfCards);
 
     const image1$ = this.afs
-      .collection('albumcards', ref =>
+      .collection(`albums/${album.albumUid}`, ref =>
         ref
-          .where('albumUid', '==', album.albumUid)
           .where('nrOfCard', '==', rnd1)
       )
       .valueChanges();
     const image2$ = this.afs
-      .collection('albumcards', ref =>
+      .collection(`albums/${album.albumUid}`, ref =>
         ref
-          .where('albumUid', '==', album.albumUid)
           .where('nrOfCard', '==', rnd2)
       )
       .valueChanges();
     const image3$ = this.afs
-      .collection('albumcards', ref =>
+      .collection(`albums/${album.albumUid}`, ref =>
         ref
-          .where('albumUid', '==', album.albumUid)
           .where('nrOfCard', '==', rnd3)
       )
       .valueChanges();
@@ -92,18 +103,19 @@ export class AlbumcardsService {
     );
   }
 
-  getAlbumCards(albumUid, cardUid) {
-    return this.afs
-      .collection<AlbumCards>('albumcards', ref =>
-        ref.where('albumUid', '==', albumUid).where('cardUid', '==', cardUid)
-      )
-      .valueChanges();
-  }
+  // getAlbumCards(albumUid, cardUid) {
+  //   return this.afs
+  //     .collection<AlbumCards>('albumcards', ref =>
+  //       ref.where('albumUid', '==', albumUid).where('cardUid', '==', cardUid)
+  //     )
+  //     .valueChanges();
+  // }
 
-  deleteAlbumCards(uid) {
+  deleteAlbumCards(albumUid, albumcardUid) {
     return this.afs
-      .collection<AlbumCards>('albumcards')
-      .doc(uid)
+      .collection('albums').doc(albumUid)
+      .collection('cards')
+      .doc(albumcardUid)
       .delete();
   }
 
@@ -114,21 +126,25 @@ export class AlbumcardsService {
       .update(albumcard);
   }
 
-  getAllCardsForAlbumUid(uid) {
+  getAllCardsForAlbumUid(uid: string): Observable<AlbumCards[]> {
     return this.afs
-      .collection<AlbumCards>('albumcards', ref =>
-        ref.where('albumUid', '==', uid).orderBy('nrOfCard')
-      )
+      .collection<AlbumCards>(`albums/${uid}/cards`)
+      // .collection<AlbumCards>(`albums/${uid}/cards`, ref =>
+      //   ref.orderBy('nrOfCard')
+      // )
       .valueChanges();
+    // .snapshotChanges()
+    // .pipe(map(snaps => this.utilityService.convertSnaps(snaps)));
   }
 
   getAllCardsUrlForAlbumUid(uid) {
     return this.getAllCardsForAlbumUid(uid).pipe(
-      map(images =>
+      map((images: Image[]) =>
         images.map(image =>
           this.afs.collection('images', ref => ref.where('imageUid', '==', uid))
         )
       )
     );
   }
+
 }

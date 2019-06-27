@@ -1,0 +1,72 @@
+.image {
+    margin-bottom: 2rem;
+}
+
+#dropzone {
+    border-radius: 100%;
+    width: 200px;
+    height: 200px;
+    margin: 0 auto;
+    cursor: pointer;
+    background: #f4f4f4;
+    // display: table;
+    background-size: cover;
+    background-position: center center;
+    box-shadow: 0 5px 8px rgba(black, 0.35);
+
+    .dashes {
+        border-radius: 100%;
+        width: 100%;
+        height: 100%;
+        border: 4px dashed #ddd;
+        opacity: 1;
+        position: relative;
+    }
+
+    .dropzone-label {
+        text-align: center;
+        color: grey;
+        margin: 0;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 1.5rem;
+    }
+
+    &.hasImage {
+
+        .dashes,
+        .dropzone-label {
+            opacity: 0;
+            pointer-events: none;
+            user-select: none;
+        }
+    }
+}
+
+
+.progress-bar {
+    font-size: 2rem;
+    margin-top: 10px;
+    // font-weight: $bold;
+    text-align: center;
+
+    &--number {
+        z-index: 5;
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+progress::-webkit-progress-value {
+    transition: width 0.1s ease;
+}

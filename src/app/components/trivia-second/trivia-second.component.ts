@@ -7,7 +7,6 @@ import {Question, Answer} from 'src/app/models/question';
 import {QuestionService} from 'src/app/services/question/question.service';
 import {UtilityService} from 'src/app/services/utility.service';
 import {map, tap, take} from 'rxjs/operators';
-import {TagPlaceholder} from '@angular/compiler/src/i18n/i18n_ast';
 import {Router} from '@angular/router';
 import {ImageService} from 'src/app/services/image/image.service';
 import {UsersalbumsService} from 'src/app/services/usersalbums.service';

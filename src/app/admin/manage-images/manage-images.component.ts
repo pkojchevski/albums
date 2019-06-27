@@ -5,21 +5,16 @@ import {
   ViewChild,
   ElementRef,
 } from '@angular/core';
-import {ImageService} from 'src/app/services/image/image.service';
-import {Observable, from, of} from 'rxjs';
-import {Image, initialImage} from 'src/app/models/image';
-import {GridApi, ColumnApi} from 'ag-grid-community';
-import {CardRendererComponent} from './card-renderer.component';
-import {COLLECTIONS, Collection} from 'src/app/models/collections';
-import {Album, initialAlbum} from 'src/app/models/album';
-import {AlbumService} from 'src/app/services/album/album.service';
-import {AlbumcardsService} from 'src/app/services/albumcards/albumcards.service';
-import {BatchService} from 'src/app/services/batch/batch.service';
-import {tap, map, flatMap} from 'rxjs/operators';
-import {AlbumCards} from 'src/app/models/albumcards';
-import {combineLatest} from 'rxjs';
-import {NgForm} from '@angular/forms';
-import {CollectionService} from 'src/app/services/collection.service';
+import { ImageService } from 'src/app/services/image/image.service';
+import { Observable, from, of } from 'rxjs';
+import { Image, initialImage } from 'src/app/models/image';
+import { GridApi, ColumnApi } from 'ag-grid-community';
+import { Collection } from 'src/app/models/collections';
+import { Album, initialAlbum } from 'src/app/models/album';
+import { AlbumService } from 'src/app/services/album/album.service';
+import { AlbumcardsService } from 'src/app/services/albumcards/albumcards.service';
+import { NgForm } from '@angular/forms';
+import { CollectionService } from 'src/app/services/collection.service';
 
 @Component({
   selector: 'app-manage-images',
@@ -29,7 +24,7 @@ import {CollectionService} from 'src/app/services/collection.service';
 export class ManageImagesComponent implements OnInit {
   images$: Observable<Image[]>;
   collections$: Observable<Collection[]>;
-
+  albums$: Observable<any[]>;
   cols;
   @ViewChild('f') form: NgForm;
   @ViewChild('selColl') selColl: HTMLSelectElement;
@@ -49,7 +44,7 @@ export class ManageImagesComponent implements OnInit {
   albums;
   album: Album = initialAlbum;
   cardsInAlbum: Image[];
-  currAlbum: Album = initialAlbum;
+  currAlbum = of(initialAlbum);
   imagesForAlbum$: Observable<any[]>;
   imagesForAlbum = [];
   defaultName: string;
@@ -60,52 +55,25 @@ export class ManageImagesComponent implements OnInit {
     private albumService: AlbumService,
     private albumcards: AlbumcardsService,
     private collectionService: CollectionService
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.collections$ = this.collectionService.getAllCollections();
     this.images$ = this.imageService.getAllImages();
-    this.collection = '';
-    this.albumName = '';
-    this.albumNames =
-      JSON.parse(localStorage.getItem('albumNames') || '') || [];
+
   }
 
-  getAlbumNames(collection) {
-    this.albumService.getAlbumsFromCollection(collection).subscribe(albums => {
-      this.albums = albums;
-      this.albumNames = albums.map((album: Album) => album.name);
-      localStorage.setItem('albumNames', JSON.stringify(this.albumNames));
-    });
+  getAlbumNames(collection: Collection) {
+    // tslint:disable-next-line:curly
+    if (!collection) return;
+
+    this.albums$ = this.albumService.getAlbumsFromCollection(collection.collection);
+
   }
 
-  getImagesForAlbum(name) {
-    this.albumService.getAlbumFromCollectionAndName(
-      name,
-      this.collection
-    ).subscribe((album: Album) => {
-      this.currAlbum = album[0];
-
-      // tslint:disable-next-line:curly
-      if (!this.currAlbum) return;
-
-    this.imagesForAlbum$ = this.albumcards
-      .getAllCardsForAlbumUid(this.currAlbum.albumUid)
-      .pipe(
-        map((cards: AlbumCards[]) =>
-          cards.map((card: AlbumCards) =>
-            this.imageService.getCurrentImage(card).pipe(
-              map(image => ({
-                ...image,
-                nrOfCard: card.nrOfCard,
-                albumUid: this.currAlbum.albumUid,
-                albumcardsUid: card.albumcardUid,
-              }))
-            )
-          )
-        ),
-        flatMap(obs => combineLatest(obs))
-      );
-    });
+  getImagesForAlbum(album: Album) {
+    this.albumService.getAlbumFromCollectionAndName(album.name, album.collection)
+      .subscribe(alb => this.currAlbum = alb[0]);
+    this.imagesForAlbum$ = this.albumcards.getAllCardsForAlbumUid(album.albumUid);
   }
 }

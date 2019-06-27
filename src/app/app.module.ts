@@ -14,7 +14,7 @@ import { ModalComponent } from './components/modal/modal.component';
 import { AuthComponent } from './components/auth/auth.component';
 import { RouterModule, Routes } from '@angular/router';
 import { PageNotFoundComponent } from './pages/page-not-found/page-not-found.component';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { InteractiveAlbumComponent } from './components/interactive-album/interactive-album.component';
 import { AlbumPreviewComponent } from './components/album-preview/album-preview.component';
 import { AlbumSingleComponent } from './pages/album-single/album-single.component';
@@ -78,6 +78,9 @@ import { NguCarouselModule } from '@ngu/carousel';
 import { SwiperModule } from 'angular2-useful-swiper';
 import { ChooseExchangePlayerComponent } from './pages/choose-exchange-player/choose-exchange-player.component';
 import { CarouselChckboxComponent } from './components/carousel-chckbox/carousel-chckbox.component';
+import { DropboxComponent } from './admin/dropbox/dropbox.component';
+import { SelectComponent } from './admin/manage-images/select.component';
+import { AlbumResolver } from './services/albumresolver';
 
 
 const appRoutes: Routes = [
@@ -85,7 +88,13 @@ const appRoutes: Routes = [
   { path: 'contacts', component: ContactsComponent },
   { path: 'collections', component: CollectionsComponent },
   { path: 'albums', component: AlbumsComponent },
-  { path: 'album/:id', component: AlbumSingleComponent },
+  {
+    path: 'album/:albumUid',
+    component: AlbumSingleComponent,
+    resolve: {
+      album: AlbumResolver
+    }
+  },
   { path: 'cards-exchange', component: CardsExchangeComponent },
   { path: 'exchange-proposal', component: ExchangeProposalComponent },
   { path: 'choose-exchange-player', component: ChooseExchangePlayerComponent },
@@ -165,10 +174,13 @@ const appRoutes: Routes = [
     CarouselComponent,
     ChooseExchangePlayerComponent,
     CarouselChckboxComponent,
+    DropboxComponent,
+    SelectComponent
   ],
   imports: [
     BrowserModule,
     RouterModule.forRoot(appRoutes, { scrollPositionRestoration: 'enabled' }),
+    ReactiveFormsModule,
     Ng2CarouselamosModule,
     AngularFireModule.initializeApp(environment.firebase),
     AngularFirestoreModule,
@@ -185,7 +197,7 @@ const appRoutes: Routes = [
     NguCarouselModule,
     SwiperModule
   ],
-  providers: [AuthService],
+  providers: [AuthService, AlbumResolver],
   bootstrap: [AppComponent],
 })
 export class AppModule { }

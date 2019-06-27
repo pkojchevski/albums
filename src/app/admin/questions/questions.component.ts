@@ -5,12 +5,12 @@ import {
   ViewChild,
   Renderer2,
 } from '@angular/core';
-import {AngularFirestoreCollection} from '@angular/fire/firestore';
-import {Question, Answer, InitialQuestion} from 'src/app/models/question';
-import {QuestionService} from 'src/app/services/question/question.service';
-import {AlbumService} from 'src/app/services/album/album.service';
-import {COLLECTIONS, Collection} from 'src/app/models/collections';
-import {Observable, of, throwError} from 'rxjs';
+import { AngularFirestoreCollection } from '@angular/fire/firestore';
+import { Question, Answer, InitialQuestion } from 'src/app/models/question';
+import { QuestionService } from 'src/app/services/question/question.service';
+import { AlbumService } from 'src/app/services/album/album.service';
+import { COLLECTIONS, Collection } from 'src/app/models/collections';
+import { Observable, of, throwError } from 'rxjs';
 import {
   map,
   switchMap,
@@ -19,15 +19,15 @@ import {
   finalize,
   catchError,
 } from 'rxjs/operators';
-import {Album} from 'src/app/models/album';
-import {Level} from 'src/app/models/level';
-import {Language} from 'src/app/models/language';
-import {CollectionService} from 'src/app/services/collection.service';
-import {LanguageService} from 'src/app/services/language.service';
-import {LevelService} from 'src/app/services/level.service';
-import {ToastService} from 'src/app/services/toast/toast.service';
-import {AngularFireStorage} from '@angular/fire/storage';
-import {NgForm} from '@angular/forms';
+import { Album } from 'src/app/models/album';
+import { Level } from 'src/app/models/level';
+import { Language } from 'src/app/models/language';
+import { CollectionService } from 'src/app/services/collection.service';
+import { LanguageService } from 'src/app/services/language.service';
+import { LevelService } from 'src/app/services/level.service';
+import { ToastService } from 'src/app/services/toast/toast.service';
+import { AngularFireStorage } from '@angular/fire/storage';
+import { NgForm } from '@angular/forms';
 
 @Component({
   selector: 'app-questions',
@@ -48,6 +48,7 @@ export class QuestionsComponent implements OnInit {
   file;
   imageIsDropped: boolean;
   percentage;
+  imageIsAdded: boolean;
 
   @ViewChild('dropzone') dropzone: ElementRef;
   @ViewChild('addQuestionForm') form: NgForm;
@@ -60,7 +61,7 @@ export class QuestionsComponent implements OnInit {
     private toast: ToastService,
     private afStorage: AngularFireStorage,
     private renderer: Renderer2
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.collections$ = this.collectionService.getAllCollections();
@@ -68,81 +69,40 @@ export class QuestionsComponent implements OnInit {
     this.levels$ = this.levelService.getAllLevels();
   }
 
-  addQuestion(e) {
-    if (!this.imageIsDropped) {
-      this.questionService
-        .addQuestion(this.question)
-        .then(() => this.formReset());
-    } else {
-      this.addQuestionWithImage(this.file);
-    }
-  }
-
   toggleHover(event: boolean) {
     this.isHovering = event;
   }
 
-  getFile(event: FileList) {
-    this.file = event.item(0);
-    if (this.file.type.split('/')[0] !== 'image') {
+  getImageUrl(event) {
+    this.file = event.file;
+    this.imageIsDropped = event.dropped;
+  }
+
+  addImage() {
+    if (!this.imageIsDropped) {
       this.toast.newToast({
-        content: 'File type is unsuported',
+        content: `Please upload image!`,
         style: 'warning',
       });
-      this.file = null;
+      this.imageIsAdded = false;
       return;
     }
-    // file
 
-    this.imageIsDropped = true;
-  }
-
-  addQuestionWithImage(file) {
-    const path = `questions/${file.name}`;
-    const fileRef = this.afStorage.ref(path);
-    const task = this.afStorage.upload(path, file);
-    this.percentage = task.percentageChanges();
-    task
-      .snapshotChanges()
-      .pipe(
-        finalize(() => {
-          fileRef.getDownloadURL().subscribe(url => {
-            this.question.imageUrl = url;
-            this.questionService
-              .addQuestion(this.question)
-              .then(() => {
-                this.percentage = of(null);
-                this.formReset();
-                this.renderer.removeStyle(
-                  this.dropzone.nativeElement,
-                  'backgroundImage'
-                );
-                this.toast.newToast({
-                  content: 'Question is added',
-                  style: 'success',
-                });
-              })
-              .catch(err =>
-                this.toast.newToast({
-                  content: `Error${err.name}`,
-                  style: 'warning',
-                })
-              );
-          });
-        }),
-        catchError(err => {
-          this.toast.newToast({content: `Error${err.name}`, style: 'warning'});
-          return throwError(err);
+    this.questionService.addNewQuestion(this.question, this.file)
+      .then(() => {
+        this.toast.newToast({
+          content: 'Question is added',
+          style: 'success',
+        });
+        this.imageIsAdded = true;
+        this.formReset();
+      })
+      .catch(err =>
+        this.toast.newToast({
+          content: `Error${err.name}`,
+          style: 'warning',
         })
-      )
-      .subscribe();
-  }
-
-  isActive(snapshot) {
-    return (
-      snapshot.state === 'running' &&
-      snapshot.bytesTransferred < snapshot.totalBytes
-    );
+      );
   }
 
   formReset() {

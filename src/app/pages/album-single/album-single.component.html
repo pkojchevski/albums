@@ -2,7 +2,8 @@
   <div class="block-decorations"></div>
   <div class="block-inner">
     <div class="block-title">
-      COLECCIÓN <span class="collection color-lemon">{{albumSingle?.collection}}</span> > ALBUM <strong>{{albumSingle?.name}}</strong>
+      COLECCIÓN <span class="collection color-lemon">{{albumSingle[0]?.collection}}</span> > ALBUM
+      <strong>{{albumSingle[0]?.name}}</strong>
     </div>
   </div>
 </div>
@@ -16,8 +17,8 @@
             <div class="cromos-cards" *ngFor="let c of cardsToAdd; let i = index">
               <div class="cromos-center">
                 <div class="single-card" appPileOfCards [translator]="i*0.5">
-                    <img draggable src="{{c.image.url}}" [dragData]="c">
-                    <div class="card-number">{{c.nrOfCard}}</div>
+                  <img draggable src="{{c.image.url}}" [dragData]="c">
+                  <div class="card-number">{{c.nrOfCard}}</div>
                 </div>
               </div>
             </div>
@@ -49,10 +50,12 @@
         <div class="navi-links">
           <ul>
             <li><a class="btn btn-round btn-green" (click)="openGroupModal()">Apuntarse a Grupo</a></li>
-            <li><a class="btn btn-round btn-blue" (click)="goToAlbumOverview()">Ver Resumen Cromos</a></li>
+            <li><a class="btn btn-round btn-blue" [routerLink]="album-overview">Ver Resumen Cromos</a></li>
             <li><a class="btn btn-round btn-orange" (click)="openSubscriptionModal()">Apuntarse a Subscripción</a></li>
-            <li *ngIf="!albumOpened"><a class="btn btn-round btn-red" (click)="goToExchange()">Intercambio de Cromos</a></li>
-            <li *ngIf="!albumOpened"><a class="btn btn-round btn-l_blue" (click)="goToRanking()">RANKING</a></li>
+            <li *ngIf="!albumOpened"><a class="btn btn-round btn-red" [routerLink]="cards-exchange">Intercambio de
+                Cromos</a>
+            </li>
+            <li *ngIf="!albumOpened"><a class="btn btn-round btn-l_blue" [routerLink]="ranking">RANKING</a></li>
           </ul>
         </div>
       </div>
@@ -83,7 +86,7 @@
       <a class="navi-right" (click)="next()"><span class="icon icon-arrow_r"></span></a>
       <div class="preview-content">
         <div class="preview-bg bg-lemon"></div>
-        <div class="preview-img"><img src="{{rndImage?.url}}" alt=""></div>
+        <div class="preview-img"><img src="{{albumSingle?.coverPageUrl}}" alt=""></div>
         <div class="preview-label">
           <div class="label"></div>
         </div>
@@ -94,7 +97,9 @@
     </div>
 
     <div *ngIf="albumOpened">
-      <app-open-album></app-open-album>
+      <!-- <app-open-album></app-open-album> -->
+      <app-open-album *ngIf="isSubscribedAlbum$|async" [album]='albumSingle'></app-open-album>
+      <app-interactive-album *ngIf="!isSubscribedAlbum$|async" [album]='albumSingle'></app-interactive-album>
     </div>
 
 

@@ -29,7 +29,7 @@ export class UsersalbumsService implements OnDestroy {
       .collection('usersalbums', ref =>
         ref
           .where('userUid', '==', localStorage.getItem('user_uid'))
-          .where('albumUid', '==', cards[0].albumUid)
+          // .where('albumUid', '==', cards[0].albumUid)
       )
       .valueChanges()
       .pipe(take(1))

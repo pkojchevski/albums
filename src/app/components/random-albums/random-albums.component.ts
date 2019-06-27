@@ -1,14 +1,14 @@
-import {Component, OnInit} from '@angular/core';
-import {ModalService} from '../../services/modal.service';
-import {DataService} from 'src/app/services/data/data.service';
-import {AlbumService} from 'src/app/services/album/album.service';
-import {take, bufferCount, first} from 'rxjs/operators';
-import {ImageService} from 'src/app/services/image/image.service';
-import {Observable} from 'rxjs';
-import {Album} from 'src/app/models/album';
-import {Image} from 'src/app/models/image';
-import {UtilityService} from 'src/app/services/utility.service';
-import {AlbumCards} from 'src/app/models/albumcards';
+import { Component, OnInit } from '@angular/core';
+import { ModalService } from '../../services/modal.service';
+import { DataService } from 'src/app/services/data/data.service';
+import { AlbumService } from 'src/app/services/album/album.service';
+import { take, bufferCount, first } from 'rxjs/operators';
+import { ImageService } from 'src/app/services/image/image.service';
+import { Observable } from 'rxjs';
+import { Album } from 'src/app/models/album';
+import { Image } from 'src/app/models/image';
+import { UtilityService } from 'src/app/services/utility.service';
+import { AlbumCards } from 'src/app/models/albumcards';
 
 @Component({
   selector: 'app-random-albums',
@@ -28,10 +28,9 @@ export class RandomAlbumsComponent implements OnInit {
     private imageService: ImageService,
     private utility: UtilityService,
     private dataService: DataService
-  ) {}
+  ) { }
 
   ngOnInit() {
-    console.log('random-album');
     this.albumService.getAllAlbums().subscribe(albums => {
       this.rndAlbum = this.utility.getRandom(albums, 1)[0];
       this.dataService.changeAlbum(this.rndAlbum);
@@ -46,8 +45,10 @@ export class RandomAlbumsComponent implements OnInit {
         this.imageService
           .getRandomImageFromAlbum(album)
           .subscribe(albumcard => {
-            album['url'] = albumcard[0]['image'].url;
-            this.loaded = true;
+            if (albumcard[0]) {
+              album['url'] = albumcard[0]['image'].url;
+              this.loaded = true;
+            }
           });
       });
     });
@@ -56,7 +57,7 @@ export class RandomAlbumsComponent implements OnInit {
   openModal() {
     this.modalService.modalShow({
       modalShow: true,
-      modalContent: {modalType: 'auth'},
+      modalContent: { modalType: 'auth' },
     });
   }
 }

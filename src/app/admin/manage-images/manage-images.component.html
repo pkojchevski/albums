@@ -1,6 +1,7 @@
 <div class='container'>
   <div class='images'>
-    <app-image-list [isImagesForAlbum]=false [album]='currAlbum' [delete]=false [addToAlbum]=true [imagesInput]='images$|async'></app-image-list>
+    <app-image-list [isImagesForAlbum]=false [album]='currAlbum' [delete]=false [addToAlbum]=true
+      [imagesInput]='images$|async'></app-image-list>
   </div>
 
   <div class="albums">
@@ -8,27 +9,19 @@
       <form #f="ngForm">
         <div class="controls">
           <div class='label'>
-            <strong>{{currAlbum?.nrOfCards}}/100</strong>
+            <strong>{{currAlbum?.nrOfCards || 0}}/100</strong>
           </div>
-          <div class="select-style">
-            <select name='collection' [(ngModel)]="collection" (ngModelChange)="getAlbumNames($event)">
-              <option value=''>--Collection--</option>
-              <option *ngFor="let coll of collections$|async" value='{{coll.collection}}'>
-                {{coll.collection}}
-              </option>
-            </select>
+          <div *ngIf="collections$|async as collections">
+            <app-select labelKey="collection" idKey="collectionUid" [options]="collections"
+              (selectChange)="getAlbumNames($event)"></app-select>
           </div>
-          <div class="select-style">
-            <select name='albumName' [(ngModel)]="albumName" (ngModelChange)="getImagesForAlbum($event)">
-              <option value=''>--Name--</option>
-              <option *ngFor="let name of albumNames" value='{{name}}'>{{name}}
-              </option>
-            </select>
+          <div *ngIf="albums$|async as albums">
+            <app-select labelKey="name" idKey="albumUid" [options]="albums" (selectChange)="getImagesForAlbum($event)">
+            </app-select>
           </div>
         </div>
       </form>
     </div>
-
     <app-image-list [isImagesForAlbum]=true [delete]=true [addToAlbum]=false [imagesInput]='imagesForAlbum$|async'
       [album]='currAlbum'>
     </app-image-list>

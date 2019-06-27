@@ -1,11 +1,12 @@
-import {Component, OnInit} from '@angular/core';
-import {ImageService} from 'src/app/services/image/image.service';
-import {DataService} from 'src/app/services/data/data.service';
-import {Observable} from 'rxjs';
-import {Album} from 'src/app/models/album';
-import {AlbumcardsService} from 'src/app/services/albumcards/albumcards.service';
-import {Cards} from 'src/app/models/usersalbums';
-import {UsersalbumsService} from 'src/app/services/usersalbums.service';
+import { Component, OnInit, Input } from '@angular/core';
+import { ImageService } from 'src/app/services/image/image.service';
+import { DataService } from 'src/app/services/data/data.service';
+import { Observable } from 'rxjs';
+import { Album } from 'src/app/models/album';
+import { AlbumcardsService } from 'src/app/services/albumcards/albumcards.service';
+import { Cards } from 'src/app/models/usersalbums';
+import { UsersalbumsService } from 'src/app/services/usersalbums.service';
+import { AlbumCards } from 'src/app/models/albumcards';
 
 @Component({
   selector: 'app-open-album',
@@ -13,6 +14,11 @@ import {UsersalbumsService} from 'src/app/services/usersalbums.service';
   styleUrls: ['./open-album.component.scss'],
 })
 export class OpenAlbumComponent implements OnInit {
+  @Input() album: Album;
+  userAlbumCards = [];
+
+
+
   albums$: Observable<Album[]>;
   rndAlbum$: Observable<Album>;
   rndAlbum: Album;
@@ -39,23 +45,25 @@ export class OpenAlbumComponent implements OnInit {
     private dataService: DataService,
     private imagecardsService: AlbumcardsService,
     private userAlbumService: UsersalbumsService
-  ) {}
+  ) { }
 
   ngOnInit() {
-    this.dataService.currentArr1.subscribe(userAlbum => {
-      this.userAlbum = userAlbum;
-      this.arrayLengthMin = 0;
-      this.arrayLengthMax = 8;
-      if (this.userAlbum.cards.length - 1 < 7) {
-        this.arrayLengthMax = this.userAlbum.cards.length - 1;
-        this.beginingOfArray = true;
-        this.endOfArray = true;
-      }
+    console.log('album in open-album:', this.album);
+    this.userAlbumCards = new Array.fill(this.album.nrOfCards);
+    // this.dataService.currentArr1.subscribe(userAlbum => {
+    //   this.userAlbum = userAlbum;
+    //   this.arrayLengthMin = 0;
+    //   this.arrayLengthMax = 8;
+    //   if (this.userAlbum.cards.length - 1 < 7) {
+    //     this.arrayLengthMax = this.userAlbum.cards.length - 1;
+    //     this.beginingOfArray = true;
+    //     this.endOfArray = true;
+    //   }
 
-      this.userAlbumSliced = this.userAlbum.cards
-        .slice(this.arrayLengthMin, this.arrayLengthMax)
-        .sort((a, b) => b.nrOfCards - a.nrofCards);
-    });
+    //   this.userAlbumSliced = this.userAlbum.cards
+    //     .slice(this.arrayLengthMin, this.arrayLengthMax)
+    //     .sort((a, b) => b.nrOfCards - a.nrofCards);
+    // });
   }
 
   onItemDropped(event, card) {

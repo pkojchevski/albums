@@ -10,12 +10,14 @@ export class AppComponent implements OnInit {
   title = 'cromos';
   modalIsOpen = false;
   modalContent;
+  data;
   constructor(private modalService: ModalService) {}
 
   ngOnInit() {
     this.modalService.modal.subscribe(modal => {
       this.modalIsOpen = modal.modalShow;
       this.modalContent = modal.modalContent;
+      this.data = modal.data;
     });
   }
 }

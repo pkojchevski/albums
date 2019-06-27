@@ -25,19 +25,19 @@
       <div class="preview-lg">
         <div class="preview-inner">
           <div class="preview-img">
-            <div *ngIf='!randomImage; else image'>
+            <div *ngIf='(latestAlbum$|async) as latestAlbum'>
               <app-loader></app-loader>
             </div>
             <!-- <img src="https://source.unsplash.com/random/1000x500" alt=""> -->
             <ng-template #image>
-              <img src="{{randomImage?.image.url}}" alt="">
+              <img src="{{latestAlbum.coverPageUrl}}" alt="">
             </ng-template>
 
           </div>
           <div class="preview-label"><span class="label">b</span></div>
         </div>
         <div class="preview-type">NUEVO ALBUM</div>
-        <div class="preview-title">{{album?.name}}</div>
+        <div class="preview-title">{{latestAlbum?.name}}</div>
       </div>
       <div class="preview-navi">
         <ul>
@@ -55,11 +55,11 @@
   <div class="block-inner">
     <div class="albums-list">
       <!-- <app-album-preview *ngFor="let album of [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]"></app-album-preview> -->
-      <app-album-preview *ngFor="let album of albums" [album]='album'></app-album-preview>
+      <app-album-preview *ngFor="let album of albums$|async" [album]='album'></app-album-preview>
 
     </div>
     <div class="albums-more">
-      <a class="btn btn-round btn-gray"><span class="icon icon-plus"></span></a>
+      <a class="btn btn-round btn-gray"><span class="icon icon-plus" (click)="showNextAlbums()"></span></a>
     </div>
   </div>
 </div>
